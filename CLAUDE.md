@@ -27,7 +27,7 @@ Only `extension/` ships. Never add docs, tests or tooling inside it.
 ## Conventions
 
 - Plain JavaScript, no framework, no bundler, no build step for the extension itself. Keep it that way unless asked.
-- Content scripts can't load `settings.js`; they read resolved settings from `chrome.storage.sync` and fall back to `FALLBACK` in `content.js`. If you add a setting, add its default to `DMG_DEFAULTS` and handle it being missing in `content.js`.
+- Content scripts can't load `settings.js`; they read resolved settings from `chrome.storage.sync` and fall back to `FALLBACK` in `content.js`. If you add a setting, add its default to `DMG_DEFAULTS` and handle it being missing in `content.js`. Stored values are untrusted: validate palette colours (`#rrggbb`) and clamp numeric ranges before use.
 - Every DOM change the content script makes must be undone on toggle-off: no leftover elements, attributes, inline custom properties or styles (CTL-7).
 - Build SVG with `createElementNS`, never `innerHTML` (pages with Trusted Types CSP).
 - No network requests, analytics or remote code (NFR-6). Fonts and palettes are bundled.
@@ -53,14 +53,15 @@ Only `extension/` ships. Never add docs, tests or tooling inside it.
 
 - Per-tab on/off lives in `chrome.storage.session` (`on:<tabId>`); the badge shows "ON".
 - Toolbar click opens the popup (Chrome can't both open a popup and toggle). `Alt+Shift+G` toggles directly.
-- Install permissions: `activeTab`, `scripting`, `storage`. `<all_urls>` is an **optional** host permission, needed for tab mode ("Stay on as this tab browses") and "Remember for this site", because `activeTab` access ends when the tab navigates.
+- Install permissions: `activeTab`, `scripting`, `storage`. `*://*/*` (http/https only) is an **optional** host permission, needed for tab mode ("Stay on as this tab browses") and "Remember for this site", because `activeTab` access ends when the tab navigates. `file://` pages are not supported: no file host permission is requested.
 - The permission prompt needs a user gesture in an extension page, so the popup requests it on the first **Turn on** (and when either checkbox is ticked). The keyboard shortcut can't request it.
+- `minimum_chrome_version` is 130 because the font `web_accessible_resources` uses `use_dynamic_url` (so sites can't fingerprint the extension by its ID). Don't lower it.
 - Tab mode re-injects on `tabs.onUpdated` 'loading' (with `injectImmediately`, to avoid a full-colour flash) and again on 'complete'. `content.js` ignores repeat injection and repeat "on" messages, and `keepOnTop()` moves the overlay back to the end of `<html>` after parsing.
 - Current defaults: palette DMG, pixelate images on (4px), font Pixelify, tab mode on.
 
 ## Testing
 
-- Manual: load `extension/` unpacked, enable **Allow access to file URLs**, open `test/pages/*.html`. Real-site checks so far: LinkedIn, BBC News, eBay (home and search results).
+- Manual: load `extension/` unpacked. Serve the repo over HTTP (`python3 -m http.server`) and open `test/pages/*.html` from `http://localhost:8000/...` — the extension doesn't request file:// access. Real-site checks so far: LinkedIn, BBC News, eBay (home and search results).
 - Automated checks during development used Playwright with headless Chrome (`--headless=new`, `--load-extension`) against `test/pages`, served over HTTP. A test copy of the manifest added `host_permissions: ["<all_urls>"]` so `executeScript` works without a gesture. The checks:
   - every pixel is one of the 4 palette colours;
   - the fixed header stays pinned;

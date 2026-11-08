@@ -57,7 +57,10 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command === 'toggle-dmg' && tab && tab.id != null) await toggle(tab.id);
 });
 
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  // Only this extension may drive tabs; never act on a message without our id.
+  if (!sender || sender.id !== chrome.runtime.id) return;
+  if (!Number.isInteger(msg.tabId)) { sendResponse({ ok: false, on: false }); return; }
   (async () => {
     if (msg.type === 'popup:toggle') sendResponse(await toggle(msg.tabId));
     else if (msg.type === 'popup:state') sendResponse({ on: await isOn(msg.tabId) });
@@ -72,10 +75,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
 // ---------- navigation: follow the tab, per-site auto-apply ----------
 //
-// Both need the optional <all_urls> host permission: activeTab access ends
+// Both need the optional *://*/* host permission: activeTab access ends
 // when the tab navigates, so without it a new page can't be touched.
 
-const hasAllSites = () => chrome.permissions.contains({ origins: ['<all_urls>'] });
+const hasAllSites = () => chrome.permissions.contains({ origins: self.DMG_HOSTS });
 
 async function followsTab() {
   const { settings } = await chrome.storage.sync.get('settings');
@@ -84,7 +87,11 @@ async function followsTab() {
 
 async function siteRemembered(url) {
   let origin;
-  try { origin = new URL(url).origin; } catch { return false; }
+  try {
+    const u = new URL(url);
+    if (!/^https?:$/.test(u.protocol)) return false;
+    origin = u.origin;
+  } catch { return false; }
   const { sites = {} } = await chrome.storage.local.get('sites');
   return !!(sites[origin] && sites[origin].enabled) && (await hasAllSites());
 }

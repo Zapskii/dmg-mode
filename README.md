@@ -31,7 +31,7 @@ git clone https://github.com/Zapskii/dmg-mode.git
 2. Click **Load unpacked** and pick the **`extension/`** folder inside the repo.
 3. Pin DMG Mode to the toolbar, open any page, and press `Alt+Shift+G` (or use the popup).
 
-Test against `test/pages/fixture.html` (palette, pixelation, tall pages) and `test/pages/fonts.html` (pixel fonts). Open them with `file://`. To do that, turn on **Allow access to file URLs** in the extension's details.
+Test against `test/pages/fixture.html` (palette, pixelation, tall pages) and `test/pages/fonts.html` (pixel fonts). Serve the repo over HTTP — `python3 -m http.server` at the repo root, then open `http://localhost:8000/test/pages/fixture.html`. The extension doesn't request file:// access.
 
 ## Build the store package
 

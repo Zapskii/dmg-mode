@@ -1,10 +1,13 @@
 const DEFAULTS = self.DMG_DEFAULTS;
+const HOSTS = self.DMG_HOSTS;
+const HEX = /^#[0-9a-f]{6}$/i;
+const safeColors = (c) => (Array.isArray(c) && c.length === 4 && c.every((x) => HEX.test(x)) ? c : DEFAULTS.colors);
 const $ = (id) => document.getElementById(id);
 
 let tab = null;
 let settings = { ...DEFAULTS };
 let palettes = [];
-let allSites = false; // optional <all_urls> permission granted?
+let allSites = false; // optional *://*/* permission granted?
 let tabOn = false;
 
 async function loadPalettes() {
@@ -15,7 +18,7 @@ async function loadPalettes() {
 }
 
 function renderSwatches(colors) {
-  $('swatches').replaceChildren(...colors.map((c) => {
+  $('swatches').replaceChildren(...safeColors(colors).map((c) => {
     const i = document.createElement('i');
     i.style.background = c;
     return i;
@@ -70,9 +73,10 @@ async function init() {
 
   const stored = (await chrome.storage.sync.get('settings')).settings;
   settings = { ...DEFAULTS, ...(stored || {}) };
+  settings.colors = safeColors(settings.colors); // synced values are untrusted
   renderSettings();
 
-  allSites = await chrome.permissions.contains({ origins: ['<all_urls>'] });
+  allSites = await chrome.permissions.contains({ origins: HOSTS });
   renderFollow();
 
   if (!tab) return;
@@ -99,7 +103,7 @@ $('toggle').addEventListener('click', async () => {
   // First "Turn on" with tab mode enabled: ask for all-sites access now, while
   // we have the click (Chrome only shows the prompt for a user gesture).
   if (!tabOn && settings.followTab && !allSites) {
-    allSites = await chrome.permissions.request({ origins: ['<all_urls>'] });
+    allSites = await chrome.permissions.request({ origins: HOSTS });
     if (!allSites) await save({ followTab: false }); // declined: plain page mode
     renderFollow();
   }
@@ -127,7 +131,7 @@ $('remember').addEventListener('change', async (e) => {
   if (!o) return;
   if (e.target.checked) {
     // Must run inside the click: Chrome only shows the permission prompt for a user gesture.
-    const granted = await chrome.permissions.request({ origins: ['<all_urls>'] });
+    const granted = await chrome.permissions.request({ origins: HOSTS });
     if (!granted) { e.target.checked = false; return; }
   }
   const { sites = {} } = await chrome.storage.local.get('sites');
@@ -143,7 +147,7 @@ $('remember').addEventListener('change', async (e) => {
 $('follow-tab').addEventListener('change', async (e) => {
   if (e.target.checked && !allSites) {
     // Must run inside the click: Chrome only shows the permission prompt for a user gesture.
-    allSites = await chrome.permissions.request({ origins: ['<all_urls>'] });
+    allSites = await chrome.permissions.request({ origins: HOSTS });
     if (!allSites) { e.target.checked = false; return; }
   }
   save({ followTab: e.target.checked });

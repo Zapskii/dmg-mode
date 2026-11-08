@@ -29,9 +29,11 @@
   };
 
   // Brightness/contrast/invert as one linear transfer: out = slope * in + intercept.
+  // Values arrive from storage, so clamp them rather than trusting the popup.
+  const clamp = (v) => (Number.isFinite(+v) ? Math.max(-50, Math.min(50, +v)) : 0);
   const linear = (s) => {
-    const k = (100 + (s.contrast || 0)) / 100;          // contrast factor around mid-grey
-    const b = (s.brightness || 0) / 100;                 // shift
+    const k = (100 + clamp(s.contrast)) / 100;           // contrast factor around mid-grey
+    const b = clamp(s.brightness) / 100;                 // shift
     const slope = s.invert ? -k : k;
     const intercept = (s.invert ? 0.5 * (1 + k) : 0.5 * (1 - k)) + b;
     return { slope: +slope.toFixed(4), intercept: +intercept.toFixed(4) };
@@ -76,7 +78,8 @@
 
     // Image pixelation: sample one pixel per block, then grow each sample into a
     // square. Applied per element, so blocks line up with each image's corner.
-    const size = Math.max(2, Math.min(12, Math.round(s.pixelSize || 4)));
+    const px = Math.round(+s.pixelSize);
+    const size = Math.max(2, Math.min(12, Number.isFinite(px) ? px : 4));
     // A dilated dot is (dot + 2 * radius) wide, so pick dot and radius that make
     // blocks exactly `size` px: overlapping blocks would leave 1px seams.
     const dot = size % 2 === 0 ? 2 : 1;
@@ -265,7 +268,14 @@
 
   // Minimal fallbacks so a missing or partial settings object can't break render().
   const FALLBACK = { colors: ['#0f380f', '#306230', '#8bac0f', '#9bbc0f'], brightness: 0, contrast: 0 };
-  const withFallback = (s) => ({ ...FALLBACK, ...(s || {}) });
+  const HEX = /^#[0-9a-f]{6}$/i;
+  const withFallback = (s) => {
+    const m = { ...FALLBACK, ...(s || {}) };
+    if (!Array.isArray(m.colors) || m.colors.length !== 4 || !m.colors.every((c) => HEX.test(c))) {
+      m.colors = FALLBACK.colors; // synced values are untrusted
+    }
+    return m;
+  };
 
   async function loadSettings() {
     const { settings: s } = await chrome.storage.sync.get('settings');

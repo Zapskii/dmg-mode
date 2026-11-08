@@ -1,5 +1,10 @@
 // Shared defaults. Loaded by the service worker (importScripts) and the popup (<script>).
 // Content scripts never load this: they read the resolved settings from storage.
+// Host patterns requested for tab mode and per-site memory. Enumerated instead
+// of <all_urls> so the extension asks only for the schemes it uses: Chrome's
+// `*` scheme covers http and https, not file.
+self.DMG_HOSTS = ['*://*/*'];
+
 self.DMG_DEFAULTS = {
   version: 1,
   palette: 'dmg',
@@ -12,14 +17,15 @@ self.DMG_DEFAULTS = {
   pixelImages: true,  // pixelate images, video, canvas and CSS backgrounds; text stays sharp
   pixelSize: 4,       // block size in CSS px, 2..12
   font: 'pixelify',   // 'off' | 'pixelify' | 'press-start' (see content.js FONTS)
-  // Stay on as a tab browses. Needs the optional <all_urls> permission, which
-  // the popup asks for the first time the user presses "Turn on".
+  // Stay on as a tab browses. Needs the optional host permission, which the
+  // popup asks for the first time the user presses "Turn on".
   followTab: true
 };
 
-// Pages where Chrome never allows extensions to run.
+// Pages where Chrome never allows extensions to run. Web pages only: the
+// extension doesn't ask for file:// access, so local files count as restricted.
 self.dmgIsRestricted = function (url) {
   if (!url) return true;
-  if (!/^(https?|file):/.test(url)) return true;
+  if (!/^https?:/.test(url)) return true;
   return /^https:\/\/(chromewebstore\.google\.com|chrome\.google\.com\/webstore)/.test(url);
 };

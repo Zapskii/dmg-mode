@@ -174,7 +174,7 @@ Example quantise step for the DMG palette:
 | `scripting` | `executeScript` / `insertCSS` | Install |
 | `storage` | Settings and per-site overrides | Install |
 | `offscreen` | Snapshot compositing and clipboard (v1) | Install (v1) |
-| `<all_urls>` (optional host permission) | Auto-apply on sites marked "remember for this site" without a click | Only when the user first turns on a per-site override |
+| `*://*/*` (optional host permission, http/https only) | Auto-apply on sites marked "remember for this site" without a click | Only when the user first turns on a per-site override |
 
 No `tabs`, `history`, `webRequest` or remote code.
 
