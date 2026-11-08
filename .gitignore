@@ -12,3 +12,6 @@ dist/
 
 # local Claude Code instructions
 CLAUDE.md
+
+# store artwork and recordings stay local; only extension/ ships
+store/
