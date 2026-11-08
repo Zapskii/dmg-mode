@@ -18,7 +18,9 @@ extension/            everything that ships; load this folder unpacked in chrome
   palettes/           one JSON per palette + index.json (darkest colour first, exactly 4)
   assets/             icons; fonts/ = bundled OFL pixel fonts + licence texts
 docs/SPEC.md          product spec
+docs/STORE-LISTING.md Chrome Web Store copy, permission justifications, checklist
 test/pages/           fixture pages: fixture.html (palette, pixelation, fixed/sticky, iframe, canvas), fonts.html (pixel fonts, strict font CSP, icon-font stand-ins)
+store/                store assets: screenshot-1280x800.png, promo-tile-440x280.png (not shipped)
 build.sh              zips extension/ into dist/dmg-mode-<version>.zip for the Chrome Web Store
 ```
 
@@ -79,4 +81,4 @@ Only `extension/` ships. Never add docs, tests or tooling inside it.
 
 - v1: LCD dot grid (LCD-1), whole-page pixelation (LCD-2), pause pixelation while video plays (LCD-3), Bayer dither (PAL-5), SGB borders made with GB-SGB-Tooling (SGB-1..4, needs a spike on how to inset the page), snapshot and share (SHR-1), boot animation (SHR-2/3), more palettes (PAL-6).
 - Repo: CI workflow (lint, validate palette/border JSON, build zip on `v*` tags), `CONTRIBUTING.md`, issue templates, `CREDITS.md`.
-- Store: listing assets (icons done; screenshots, 440×280 promo tile), privacy statement, permission justifications.
+- Store: listing assets done (icons, screenshot, 440×280 promo tile in `store/`); copy and permission justifications drafted in `docs/STORE-LISTING.md`. Still need the privacy statement URL and to submit.
