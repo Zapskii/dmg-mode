@@ -57,9 +57,36 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command === 'toggle-dmg' && tab && tab.id != null) await toggle(tab.id);
 });
 
+// ---------- font bytes ----------
+//
+// Content scripts get font bytes from here, not by fetching a chrome-extension
+// URL themselves. With use_dynamic_url, Chrome redirects that fetch through the
+// static origin and logs "Unsafe attempt to load URL ..." on some sites
+// (YouTube) even though it succeeds. The worker has no page frame, so no
+// warning — and the fonts no longer need to be web-accessible at all.
+
+const FONT_FILE = /^(pixelify-sans|press-start-2p)\.woff2$/;
+
+const toBase64 = (buf) => {
+  const bytes = new Uint8Array(buf);
+  let bin = '';
+  // Chunked: spreading a whole font into one call overflows the argument limit.
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+};
+
+function sendFont(msg, sendResponse) {
+  if (!FONT_FILE.test(msg.file || '')) { sendResponse({}); return; }
+  fetch(chrome.runtime.getURL(`assets/fonts/${msg.file}`))
+    .then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+    .then((buf) => sendResponse({ b64: toBase64(buf) }))
+    .catch(() => sendResponse({}));
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // Only this extension may drive tabs; never act on a message without our id.
   if (!sender || sender.id !== chrome.runtime.id) return;
+  if (msg.type === 'dmg:font') { sendFont(msg, sendResponse); return true; }
   if (!Number.isInteger(msg.tabId)) { sendResponse({ ok: false, on: false }); return; }
   (async () => {
     if (msg.type === 'popup:toggle') sendResponse(await toggle(msg.tabId));

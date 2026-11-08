@@ -151,14 +151,19 @@
   function loadFont(id) {
     const f = FONTS[id];
     if (loadedFonts.has(id)) return loadedFonts.get(id);
-    const p = fetch(chrome.runtime.getURL(`assets/fonts/${f.file}`))
-      .then((r) => r.arrayBuffer())
-      .then((buf) => {
+    // Bytes arrive from the worker: fetching the chrome-extension URL here makes
+    // Chrome log "Unsafe attempt to load URL ..." on some sites (YouTube).
+    const p = new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ type: 'dmg:font', file: f.file }, (res) => {
+        if (chrome.runtime.lastError || !res || !res.b64) { reject(new Error('font')); return; }
+        const bin = atob(res.b64);
+        const buf = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
         const face = new FontFace(f.family, buf, { sizeAdjust: f.sizeAdjust, display: 'block' });
         document.fonts.add(face);
-        return face.load();
-      })
-      .catch(() => loadedFonts.delete(id)); // retry on next render
+        resolve(face.load());
+      });
+    }).catch(() => loadedFonts.delete(id)); // retry on next render
     loadedFonts.set(id, p);
     return p;
   }
