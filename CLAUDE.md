@@ -33,6 +33,7 @@ Only `extension/` ships. Never add docs, tests or tooling inside it.
 - No network requests, analytics or remote code (NFR-6). Fonts and palettes are bundled.
 - Bump `version` in `extension/manifest.json` for each release; `build.sh` reads it.
 - Trademarks: never use "Game Boy", "Nintendo" or console logos in the name, icon, UI or store listing. "DMG" is fine as a descriptive word. All art must be original or openly licensed.
+- Attribution: the public name is **Zapski** (GitHub `Zapskii`). Never use a real name in code, palette `author` fields, commits, UI or store text; commit as the GitHub noreply address.
 - UK English in user-facing text.
 
 ## How the effect works (and why)
