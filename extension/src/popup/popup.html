@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>DMG Mode</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <h1>DMG Mode</h1>
+    <span id="shortcut" class="hint"></span>
+  </header>
+
+  <p id="restricted" class="notice" hidden>Chrome doesn't let extensions run on this page.</p>
+
+  <main id="controls">
+    <button id="toggle" type="button" aria-pressed="false">Turn on</button>
+    <label class="check"><input id="follow-tab" type="checkbox"> Stay on as this tab browses</label>
+    <p id="follow-hint" class="hint" hidden>Chrome will ask for access to all sites the first time you turn this on.</p>
+
+    <label for="palette">Palette</label>
+    <div class="palette-row">
+      <select id="palette"></select>
+      <span id="swatches" aria-hidden="true"></span>
+    </div>
+
+    <label for="brightness">Brightness <output id="brightness-out">0</output></label>
+    <input id="brightness" type="range" min="-50" max="50" step="1" value="0">
+
+    <label for="contrast">Contrast <output id="contrast-out">0</output></label>
+    <input id="contrast" type="range" min="-50" max="50" step="1" value="0">
+
+    <p id="low-contrast" class="notice" hidden>Low contrast can make text hard to read.</p>
+
+    <label class="check"><input id="invert" type="checkbox"> Invert (for dark sites)</label>
+    <label class="check"><input id="pixel-images" type="checkbox"> Pixelate images</label>
+    <div id="pixel-size-row" hidden>
+      <label for="pixel-size">Pixel size <output id="pixel-size-out">4px</output></label>
+      <input id="pixel-size" type="range" min="2" max="12" step="1" value="4">
+    </div>
+    <label for="font">Text font</label>
+    <select id="font">
+      <option value="off">Site's own fonts</option>
+      <option value="pixelify">Pixel (Pixelify Sans)</option>
+      <option value="press-start">Arcade 8×8 (Press Start 2P)</option>
+    </select>
+
+    <label class="check"><input id="remember" type="checkbox"> Remember for this site</label>
+
+    <button id="reset" type="button" class="link">Reset to defaults</button>
+  </main>
+
+  <footer>
+    <a href="https://buymeacoffee.com/zapski" target="_blank" rel="noopener" id="coffee">&#9749; Buy me a coffee</a>
+    <a href="https://github.com/" target="_blank" rel="noopener" id="repo">Source on GitHub</a> <!-- TODO: point at the repo URL -->
+  </footer>
+
+  <script src="../settings.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "id": "greyscale",
+  "name": "Greyscale",
+  "colors": ["#000000", "#555555", "#aaaaaa", "#ffffff"],
+  "author": "Zapski",
+  "license": "CC-BY-4.0"
+}

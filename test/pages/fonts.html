@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- Strict font CSP: the pixel font must still load (it is added via the FontFace API). -->
+  <meta http-equiv="Content-Security-Policy" content="font-src 'none'">
+  <title>DMG Mode font fixture</title>
+  <style>
+    body { margin: 24px; font: 16px/1.5 Georgia, serif; max-width: 640px; }
+    nav a { margin-right: 16px; }
+    .card { border: 1px solid #999; padding: 12px; margin: 16px 0; }
+    .btn { font: 14px system-ui; padding: 6px 12px; }
+    /* Stand-ins for icon fonts: real sites set their icon font on these classes. */
+    .fa-solid { font-family: "Font Awesome 6 Free", Impact, sans-serif; font-style: normal; }
+    .material-icons { font-family: "Material Icons", "Courier New", monospace; }
+    .nav-icon { font-family: "Icons", Impact, sans-serif; }
+  </style>
+</head>
+<body>
+  <nav><a href="#">Home</a><a href="#">Shop</a><a href="#">Retro handhelds</a><a href="#">Contact</a></nav>
+  <h1>Pixel font fixture</h1>
+  <p>With a pixel font chosen, all of this text should switch to it. The quick brown fox jumps over the lazy dog. 0123456789 £$%&amp;?!</p>
+  <div class="card">
+    <h2>Original DMG-01, boxed</h2>
+    <p>Tested and working. Screen has no dead lines. £89.99</p>
+    <button class="btn">Add to basket</button>
+    <input value="Search the shop">
+  </div>
+  <p>Icons must NOT change: <i class="fa-solid fa-cart">[fa icon]</i> <span class="material-icons">search</span> <span class="nav-icon">[icon]</span></p>
+</body>
+</html>
