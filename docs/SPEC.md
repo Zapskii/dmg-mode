@@ -130,8 +130,9 @@ dmg-mode/
     assets/             # icons, OFL pixel fonts + licence texts
   docs/SPEC.md
   test/pages/           # local fixture pages (fixture.html, fonts.html)
+  test/validate.js      # manifest + palette checks, run by CI
   build.sh              # zips extension/ into dist/
-  .github/workflows/release.yml   # planned (CI), not yet present
+  .github/workflows/ci.yml        # validate + build; release on v* tags
 ```
 
 ### Filter pipeline
