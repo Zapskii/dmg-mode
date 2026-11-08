@@ -41,6 +41,8 @@ Test against `test/pages/fixture.html` (palette, pixelation, tall pages) and `te
 
 This zips the contents of `extension/` into `dist/dmg-mode-<version>.zip`, ready to upload to the Chrome Web Store. Only `extension/` ships; docs, tests and this README stay out of the package.
 
+CI validates the manifest and palettes, syntax-checks the scripts and builds the package on every push. Pushing a `v*` tag publishes a GitHub release with the zip attached.
+
 ## How it works
 
 `extension/src/content.js` adds one inline SVG filter to the page. It applies the filter as a `backdrop-filter` on a fixed, click-through overlay the size of the viewport:
