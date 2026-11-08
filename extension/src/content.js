@@ -22,6 +22,11 @@
 
   let enabled = false;
   let settings = null;
+  // Direct references to the nodes we own. Never look them up by id: a page can
+  // ship an element with the same id and hijack remove()/keepOnTop().
+  let svgEl = null;
+  let styleEl = null;
+  let overlayEl = null;
 
   const hexToRgb = (hex) => {
     const n = parseInt(hex.replace('#', ''), 16);
@@ -101,32 +106,34 @@
     remove();
     if (!enabled || !settings) { bgStop(); return; }
     const root = document.documentElement;
-    root.appendChild(buildFilter(settings));
+    svgEl = buildFilter(settings);
+    root.appendChild(svgEl);
 
-    const style = document.createElement('style');
-    style.id = STYLE_ID;
-    style.textContent = `#${OVERLAY_ID}{position:fixed !important;inset:0 !important;`
+    styleEl = document.createElement('style');
+    styleEl.id = STYLE_ID;
+    styleEl.textContent = `#${OVERLAY_ID}{position:fixed !important;inset:0 !important;`
       + `z-index:2147483647 !important;pointer-events:none !important;display:block !important;`
       + `margin:0 !important;padding:0 !important;border:0 !important;background:none !important;`
       + `backdrop-filter:url(#${FILTER_ID}) !important;}`
       + (settings.pixelImages ? `img,video,canvas{filter:url(#${PIXEL_ID}) !important;}` + bgRules() : '')
       + fontRules(settings.font);
-    (document.head || root).appendChild(style);
+    (document.head || root).appendChild(styleEl);
     if (FONTS[settings.font]) loadFont(settings.font);
 
     // Last child of <html>, so it stacks above the page at the same z-index.
-    const overlay = document.createElement('div');
-    overlay.id = OVERLAY_ID;
-    overlay.setAttribute('aria-hidden', 'true');
-    root.appendChild(overlay);
+    overlayEl = document.createElement('div');
+    overlayEl.id = OVERLAY_ID;
+    overlayEl.setAttribute('aria-hidden', 'true');
+    root.appendChild(overlayEl);
 
     if (settings.pixelImages) bgStart(); else bgStop();
   }
 
   function remove() {
-    document.getElementById(SVG_ID)?.remove();
-    document.getElementById(STYLE_ID)?.remove();
-    document.getElementById(OVERLAY_ID)?.remove();
+    svgEl?.remove();
+    styleEl?.remove();
+    overlayEl?.remove();
+    svgEl = styleEl = overlayEl = null;
   }
 
   // ---------- pixel font ----------
@@ -231,7 +238,7 @@
     scanTimer = null;
     const walker = document.createTreeWalker(document.body || document.documentElement, NodeFilter.SHOW_ELEMENT);
     for (let el = walker.nextNode(); el; el = walker.nextNode()) {
-      if (el.id === OVERLAY_ID) continue;
+      if (el === overlayEl) continue;
       const state = el.getAttribute(ATTR);
       if (!state) { mark(el); continue; }
       // Carousels swap inline background images; keep the layer in sync.
@@ -289,12 +296,14 @@
   // When injected early (tab mode), the parser adds <head>/<body> after the
   // overlay; move it back to the end so it stays on top.
   function keepOnTop() {
-    const o = document.getElementById(OVERLAY_ID);
-    if (o && o !== document.documentElement.lastElementChild) document.documentElement.appendChild(o);
+    if (overlayEl && overlayEl !== document.documentElement.lastElementChild) {
+      document.documentElement.appendChild(overlayEl);
+    }
   }
   document.addEventListener('DOMContentLoaded', keepOnTop);
 
-  chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (!sender || sender.id !== chrome.runtime.id) return;
     if (msg.type !== 'dmg:set') return;
     // Already on in this document (tab mode re-applies on 'loading' and 'complete').
     if (msg.on && enabled) { keepOnTop(); sendResponse({ on: true }); return; }

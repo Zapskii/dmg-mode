@@ -2,3 +2,10 @@
 node_modules/
 dist/
 *.zip
+
+# signing keys and secrets — never commit these
+*.pem
+*.key
+*.p12
+*.crx
+.env
