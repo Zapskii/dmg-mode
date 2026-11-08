@@ -1,6 +1,6 @@
 # DMG Mode
 
-A Chrome extension that redraws any web page in four shades, like a classic handheld LCD.
+A Chrome extension that makes any web page look like it's running on a Game Boy: every pixel snaps to one of four shades, with pixel fonts and chunky pixelated images.
 
 Free and open source. Collects nothing, makes no network requests, runs no remote code. [Read the source](https://github.com/Zapskii/dmg-mode).
 
@@ -100,4 +100,4 @@ Bundled fonts, both under the SIL Open Font License 1.1 (licence texts in `exten
 - Press Start 2P, © 2012 The Press Start 2P Project Authors (CodeMan38)
 - Pixelify Sans, © 2021 The Pixelify Sans Project Authors
 
-Not affiliated with or endorsed by any console maker.
+Not affiliated with or endorsed by Nintendo. "Game Boy" is a trademark of Nintendo, used here descriptively.

@@ -1,8 +1,13 @@
 # Chrome Web Store listing copy
 
 Paste-ready text for the developer console. Assets live in `store/`:
-`screenshot-1280x800.png`, `promo-tile-440x280.png`; the 128px icon is
+`screenshot-1280x800.png` (plus optional mockups), `promo-tile-440x280.png`,
+`logo-300x300.png`, `large-tile-1400x560.png`; the 128px icon is
 `extension/assets/icon-128.png`.
+
+> "Game Boy" and "Nintendo" are deliberately absent from this copy: they must
+> not appear in store text or screenshots. The README can name the look
+> descriptively; the listing says "classic handheld LCD".
 
 ## Basics
 
@@ -61,6 +66,20 @@ classic handheld LCD screen.
 - The **public contact email** is a separate verified field on the dashboard's Account page — it is not the Google sign-in address and it is shown on the listing. Use a Zapski address, not a personal one.
 - Choose **Non-Trader** unless the extension becomes commercial: trader verification can publish a postal address and phone number drawn from the Google Payments profile.
 - Set the publisher/account name to Zapski.
+
+## Microsoft Edge Add-ons
+
+Same package, separate store. Registration is free.
+
+1. Sign in at [Partner Center](https://partner.microsoft.com/dashboard) → **Account settings → Programs → Microsoft Edge → Get started**. Use an individual account and publisher display name **Zapski**; the account type cannot be changed later.
+2. Create the extension and upload `dist/dmg-mode-<version>.zip` — the Chromium manifest works unchanged. If validation complains about `minimum_chrome_version`, current Edge is well past Chromium 130, so the field can be dropped for this copy.
+3. **Availability:** Public, choose markets.
+4. **Properties:** category, website, support contact — the support URL must be publicly reachable, as with Chrome.
+5. **Privacy:** same single purpose, permission justifications, remote-code **No** and data-usage answers as above.
+6. **Store listing:** description, logo `store/logo-300x300.png` (min 128×128), small tile `store/promo-tile-440x280.png`, large tile `store/large-tile-1400x560.png`, and up to six screenshots at 1280×800 or 640×480.
+7. **Notes for certification** → **Publish**. Certification can take up to 7 business days.
+
+Updates need a version bump and a new upload. The first submission is manual; later ones can use Partner Center's Publish API from CI.
 
 ## Pre-submission checklist
 

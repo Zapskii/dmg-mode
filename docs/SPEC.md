@@ -2,7 +2,7 @@
 
 ## Overview
 
-DMG Mode is a free, open-source Chrome extension that makes any web page look like it is running on an original handheld LCD. One click or one shortcut switches it on, and it switches off just as fast.
+DMG Mode is a free, open-source Chrome extension that makes any web page look like it is running on a Game Boy — the original DMG's four-shade green LCD. One click or one shortcut switches it on, and it switches off just as fast.
 
 **What it does:** it snaps every pixel on the page to a 4-shade palette (pea-green DMG, Pocket grey or greyscale). Optional extras are an LCD dot grid, chunky pixelation, Bayer dither and an SGB-style decorative border. A snapshot button makes the result easy to share.
 
@@ -271,7 +271,7 @@ The product is called **DMG Mode** and uses no third-party trademarks in its nam
 
 ### Trademark and content rules
 
-- No "Game Boy", "Nintendo" or console logos in the name, icon, boot animation or screenshots. Describe it as "inspired by classic handheld LCDs".
+- No "Game Boy", "Nintendo" or console logos in the name, icon, boot animation or screenshots. Describe it as "inspired by classic handheld LCDs". Prose (this doc, the README) may name it descriptively; store text and assets may not.
 - "DMG" is a hardware model code, used here as a descriptive word; the boot logo and wordmark are original.
 - Every border, font and sound is original or openly licensed, with credits listed in `CREDITS.md`.
 - Store screenshots use original or own sites (e.g. retro.zapski.com), not third-party brands.
