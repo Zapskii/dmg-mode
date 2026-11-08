@@ -9,3 +9,6 @@ dist/
 *.p12
 *.crx
 .env
+
+# local Claude Code instructions
+CLAUDE.md
