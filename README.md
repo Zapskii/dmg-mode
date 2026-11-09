@@ -34,11 +34,17 @@ Chrome/Edge:
 2. Click **Load unpacked** and pick the **`extension/`** folder inside the repo.
 3. Pin DMG Mode to the toolbar, open any page, and press `Alt+Shift+G` (or use the popup).
 
-Firefox: open `about:debugging#/runtime/this-firefox`, **Load Temporary Add-on…**, and pick
-`extension-firefox/manifest.json`. `extension/` itself can't be loaded in Firefox: it carries the Chrome
-manifest (`background.service_worker`, which Firefox refuses). `extension-firefox/` is the same files with
-`manifest.firefox.json` merged in, committed so a fresh clone loads without building. After editing
-`extension/`, run `./build.sh` to refresh it — CI fails if the two drift apart.
+Firefox:
+
+1. Open `about:debugging#/runtime/this-firefox` and click **Load Temporary Add-on…**.
+2. Go into the **`extension-firefox/`** folder and pick its `manifest.json` (Firefox's picker takes the
+   manifest file; Chrome's takes the folder).
+
+Each browser has its own folder: `extension/` for Chrome and Edge, `extension-firefox/` for Firefox,
+the same code with `manifest.firefox.json` merged in. Firefox refuses the Chrome manifest
+(`background.service_worker`). `extension-firefox/` is committed, so a fresh clone loads without
+building; it's generated from `extension/`, so after editing `extension/` run `./build.sh` — CI fails
+if the two drift apart.
 
 Test against `test/pages/fixture.html` (palette, pixelation, tall pages) and `test/pages/fonts.html` (pixel fonts). Serve the repo over HTTP — `python3 -m http.server` at the repo root, then open `http://localhost:8000/test/pages/fixture.html`. The extension doesn't request file:// access.
 
