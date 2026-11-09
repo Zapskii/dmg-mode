@@ -12,12 +12,13 @@ Out of the box, DMG Mode pixelates images, switches text to the Pixelify Sans pi
 - Brightness and contrast sliders, plus an invert option for dark sites
 - **Pixelate images**: chunky 2–12 px blocks on images, video, canvases and CSS background images; text stays sharp
 - **Text font**: swap page text to a bundled pixel font, either Pixelify Sans (readable) or Press Start 2P (classic 8×8 arcade); icon fonts are left alone
-- `Alt+Shift+G` toggles the current tab (rebind at `chrome://extensions/shortcuts`)
-- Popup with live settings; settings sync across your Chrome installs
+- `Alt+Shift+G` toggles the current tab (rebind at `chrome://extensions/shortcuts` in Chrome, or
+  `about:addons` → gear → **Manage Extension Shortcuts** in Firefox)
+- Popup with live settings; settings sync across your browser installs
 - **Stay on as this tab browses**: once switched on, DMG Mode follows the tab to new pages and sites until you turn it off
 - "Remember for this site" auto-applies on future visits
 
-Both of the last two need Chrome's "all sites" access. The extension asks for it the first time you press **Turn on** (or tick either box); without it, DMG Mode only touches the page you switched it on for.
+Both of the last two need your browser's "all sites" access. The extension asks for it the first time you press **Turn on** (or tick either box); without it, DMG Mode only touches the page you switched it on for.
 
 Coming in v1: LCD dot grid, whole-page pixelation, dither, SGB-style borders, snapshot and share.
 
@@ -27,13 +28,16 @@ Coming in v1: LCD dot grid, whole-page pixelation, dither, SGB-style borders, sn
 git clone https://github.com/Zapskii/dmg-mode.git
 ```
 
+Chrome/Edge:
+
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and pick the **`extension/`** folder inside the repo.
 3. Pin DMG Mode to the toolbar, open any page, and press `Alt+Shift+G` (or use the popup).
 
-Firefox: load `extension/` as a temporary add-on from `about:debugging#/runtime/this-firefox`
-(**Load Temporary Add-on…** → pick `extension/manifest.json`). The Firefox manifest keys live in
-`manifest.firefox.json` and are merged in at build time; the folder itself still carries the Chrome manifest.
+Firefox (`extension/` carries the Chrome manifest, which Firefox can't load — build the Firefox copy first):
+
+1. `./build.sh` writes `dist/firefox-unpacked/`, the same files with `manifest.firefox.json` merged over `manifest.json`.
+2. Open `about:debugging#/runtime/this-firefox`, **Load Temporary Add-on…**, and pick `dist/firefox-unpacked/manifest.json`.
 
 Test against `test/pages/fixture.html` (palette, pixelation, tall pages) and `test/pages/fonts.html` (pixel fonts). Serve the repo over HTTP — `python3 -m http.server` at the repo root, then open `http://localhost:8000/test/pages/fixture.html`. The extension doesn't request file:// access.
 
