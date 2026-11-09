@@ -77,7 +77,10 @@
       // 3. snap each channel to the palette (channels are equal, so pixels land on exact colours)
       el('feComponentTransfer', {}, [
         disc('feFuncR', table(0)), disc('feFuncG', table(1)), disc('feFuncB', table(2)),
-        disc('feFuncA', '1')
+        // Chrome filters the opaque backdrop. Firefox filters page elements, whose
+        // transparent areas must stay transparent: snap alpha to 0 or 1 so edges
+        // don't blend into off-palette colours.
+        disc('feFuncA', GECKO ? '0 1' : '1')
       ])
     ]));
 
@@ -104,30 +107,153 @@
 
   function render() {
     remove();
-    if (!enabled || !settings) { bgStop(); return; }
+    if (!enabled || !settings) { watchStop(); return; }
     const root = document.documentElement;
     svgEl = buildFilter(settings);
     root.appendChild(svgEl);
 
     styleEl = document.createElement('style');
     styleEl.id = STYLE_ID;
-    styleEl.textContent = `#${OVERLAY_ID}{position:fixed !important;inset:0 !important;`
+    styleEl.textContent = (GECKO ? '' : `#${OVERLAY_ID}{position:fixed !important;inset:0 !important;`
       + `z-index:2147483647 !important;pointer-events:none !important;display:block !important;`
       + `margin:0 !important;padding:0 !important;border:0 !important;background:none !important;`
-      + `backdrop-filter:url(#${FILTER_ID}) !important;}`
+      + `backdrop-filter:url(#${FILTER_ID}) !important;}`)
       + (settings.pixelImages ? `img,video,canvas{filter:url(#${PIXEL_ID}) !important;}` + bgRules() : '')
+      + (GECKO ? geckoRules(settings) : '')
       + fontRules(settings.font);
     (document.head || root).appendChild(styleEl);
     if (FONTS[settings.font]) loadFont(settings.font);
 
-    // Last child of <html>, so it stacks above the page at the same z-index.
-    overlayEl = document.createElement('div');
-    overlayEl.id = OVERLAY_ID;
-    overlayEl.setAttribute('aria-hidden', 'true');
-    root.appendChild(overlayEl);
+    if (!GECKO) {
+      // Last child of <html>, so it stacks above the page at the same z-index.
+      overlayEl = document.createElement('div');
+      overlayEl.id = OVERLAY_ID;
+      overlayEl.setAttribute('aria-hidden', 'true');
+      root.appendChild(overlayEl);
+    }
 
-    if (settings.pixelImages) bgStart(); else bgStop();
+    if (!settings.pixelImages) clearBg();
+    // Firefox always needs the scan: it finds fixed elements to filter separately.
+    if (settings.pixelImages || GECKO) watchStart(); else watchStop();
   }
+
+  // ---------- Firefox: filter elements, not the backdrop ----------
+  //
+  // Firefox ignores backdrop-filter:url() and filter:url() on <html>, and a
+  // filter on <body> unpins every position:fixed element inside it (a filter
+  // makes its element the containing block). So in Firefox the palette filter
+  // goes on each child of <body> instead. Where a child contains a fixed
+  // element, we step down past it (marking it P_ATTR) and filter its children,
+  // so each fixed element ends up filtered on its own and stays pinned.
+  // <html>, <body> and P elements aren't filtered, so their own background
+  // colour is mapped to the palette in JS (PBG_ATTR + --dmg-pbg).
+  // Known gaps: text, background images and box-shadows painted directly by
+  // P elements stay in colour; fixed elements in shadow roots aren't found; a
+  // site's own `filter` on a filtered element is replaced.
+
+  const GECKO = chrome.runtime.getURL('').startsWith('moz-extension:');
+  const P_ATTR = 'data-dmg-p';
+  const PBG_ATTR = 'data-dmg-pbg';
+  let pEls = new Set();
+  let origBg = new WeakMap(); // background colour before we recoloured it
+
+  function geckoRules(s) {
+    // Plain CSS for <body>'s children, so content the parser adds before the
+    // first scan is never shown in full colour.
+    const kids = `:is(body,[${P_ATTR}])>`;
+    const not = `:not([${P_ATTR}])`;
+    return `${kids}*${not}{filter:url(#${FILTER_ID}) !important;}`
+      + `[${PBG_ATTR}]{background-color:var(--dmg-pbg) !important;}`
+      // An element can only have one filter property: chain both when it needs both.
+      + (s.pixelImages ? `${kids}:is(img,video,canvas,[${ATTR}="direct"])${not}`
+        + `{filter:url(#${PIXEL_ID}) url(#${FILTER_ID}) !important;}` : '');
+  }
+
+  // JS copy of the palette filter for one colour. A 1px canvas parses any CSS
+  // colour syntax (getComputedStyle can return oklch() and friends).
+  let pxCtx = null;
+  function toPalette(css, s) {
+    pxCtx ||= new OffscreenCanvas(1, 1).getContext('2d', { willReadFrequently: true });
+    pxCtx.clearRect(0, 0, 1, 1);
+    pxCtx.fillStyle = '#0000';
+    pxCtx.fillStyle = css;
+    pxCtx.fillRect(0, 0, 1, 1);
+    const d = pxCtx.getImageData(0, 0, 1, 1).data;
+    if (d[3] === 0) return null; // transparent: nothing of its own to paint
+    // ponytail: alpha ignored (treated as opaque); blend with the parent if translucent backgrounds look wrong.
+    const { slope, intercept } = linear(s);
+    const [r, g, b] = [d[0], d[1], d[2]].map((v) => Math.max(0, Math.min(1, slope * v / 255 + intercept)));
+    const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return s.colors[Math.min(3, Math.floor(l * 4))]; // same bands as feFuncX type=discrete
+  }
+
+  function setPbg(el, colour) {
+    if (!colour) {
+      if (el.hasAttribute(PBG_ATTR)) { el.removeAttribute(PBG_ATTR); el.style.removeProperty('--dmg-pbg'); }
+      return;
+    }
+    // Only write on change: a style write triggers the MutationObserver again.
+    if (el.style.getPropertyValue('--dmg-pbg') !== colour) el.style.setProperty('--dmg-pbg', colour);
+    if (!el.hasAttribute(PBG_ATTR)) el.setAttribute(PBG_ATTR, '');
+  }
+
+  // `fixed`: fixed elements, which must not sit inside a filtered ancestor.
+  // `contents`: display:contents elements in document order. They have no box,
+  // so a filter on one does nothing: when one would get the filter (its parent
+  // is unfiltered), step past it too. Elsewhere an ancestor's filter covers it.
+  function geckoMark(fixed, contents) {
+    const body = document.body;
+    if (!body) return;
+    const next = new Set();
+    for (const e of fixed) {
+      for (let a = e.parentElement; a && a !== body; a = a.parentElement) next.add(a);
+    }
+    for (const e of contents) if (e.parentElement === body || next.has(e.parentElement)) next.add(e);
+    for (const el of pEls) if (!next.has(el)) { el.removeAttribute(P_ATTR); setPbg(el, null); }
+    for (const el of next) if (!el.hasAttribute(P_ATTR)) el.setAttribute(P_ATTR, '');
+    pEls = next;
+
+    const own = (el) => {
+      if (!origBg.has(el)) origBg.set(el, getComputedStyle(el).backgroundColor);
+      return toPalette(origBg.get(el), settings);
+    };
+    const html = document.documentElement;
+    // The page canvas shows <html>'s background, else <body>'s, else white.
+    setPbg(html, own(html) || own(body) || toPalette('#fff', settings));
+    for (const el of [body, ...next]) setPbg(el, own(el));
+  }
+
+  // A fractional scroll offset (scroll anchoring, smooth scrolling) makes
+  // Firefox resample the filtered elements, blending edges into off-palette
+  // colours. Once scrolling stops, round the page offset to a whole device
+  // pixel, too small a move to see. Inner scrolling boxes aren't handled.
+  let snapTimer = null;
+  function snapScroll() {
+    clearTimeout(snapTimer);
+    snapTimer = setTimeout(() => {
+      const dpr = devicePixelRatio || 1;
+      const x = Math.round(scrollX * dpr) / dpr;
+      const y = Math.round(scrollY * dpr) / dpr;
+      if (x !== scrollX || y !== scrollY) scrollTo({ left: x, top: y, behavior: 'instant' });
+    }, 150);
+  }
+
+  function geckoClear() {
+    for (const el of document.querySelectorAll(`[${P_ATTR}],[${PBG_ATTR}]`)) {
+      el.removeAttribute(P_ATTR);
+      setPbg(el, null);
+      if (!el.getAttribute('style')) el.removeAttribute('style');
+    }
+    pEls = new Set();
+    origBg = new WeakMap();
+    removeEventListener('scroll', snapScroll);
+    clearTimeout(snapTimer);
+  }
+
+  // Some sites (eBay) clear unknown children of <html> while they load, which
+  // takes our filter and style with them. Seen in Firefox tab mode, where we
+  // inject before the page's own scripts run.
+  const detached = () => enabled && !!svgEl && !(svgEl.isConnected && styleEl.isConnected);
 
   function remove() {
     svgEl?.remove();
@@ -239,11 +365,22 @@
     el.setAttribute(ATTR, 'layer');
   }
 
+  // ponytail: full-page walk with getComputedStyle on every DOM change (throttled
+  // to 400ms; ~65ms on eBay search in Firefox). Walk only mutated subtrees if it shows up in profiles.
   function scan() {
     scanTimer = null;
+    if (detached()) { safeRender(); return; } // render() starts a fresh scan
+    const fixed = [];
+    const contents = [];
     const walker = document.createTreeWalker(document.body || document.documentElement, NodeFilter.SHOW_ELEMENT);
     for (let el = walker.nextNode(); el; el = walker.nextNode()) {
       if (el === overlayEl) continue;
+      if (GECKO) {
+        const cs = getComputedStyle(el);
+        if (cs.position === 'fixed') fixed.push(el);
+        else if (cs.display === 'contents') contents.push(el);
+      }
+      if (!settings.pixelImages) continue;
       const state = el.getAttribute(ATTR);
       if (!state) { mark(el); continue; }
       // Carousels swap inline background images; keep the layer in sync.
@@ -252,12 +389,14 @@
         el.style.setProperty('--dmg-bg-image', el.style.backgroundImage);
       }
     }
+    if (GECKO) geckoMark(fixed, contents);
   }
 
   const scheduleScan = () => { if (!scanTimer) scanTimer = setTimeout(scan, 400); };
 
-  function bgStart() {
+  function watchStart() {
     scan();
+    if (GECKO) { addEventListener('scroll', snapScroll, { passive: true }); snapScroll(); }
     if (observer) return;
     observer = new MutationObserver(scheduleScan);
     observer.observe(document.documentElement, {
@@ -265,11 +404,16 @@
     });
   }
 
-  function bgStop() {
+  function watchStop() {
     observer?.disconnect();
     observer = null;
     clearTimeout(scanTimer);
     scanTimer = null;
+    clearBg();
+    if (GECKO) geckoClear();
+  }
+
+  function clearBg() {
     for (const el of document.querySelectorAll(`[${ATTR}]`)) {
       el.removeAttribute(ATTR);
       el.removeAttribute(POS_ATTR);
@@ -311,7 +455,11 @@
     if (!sender || sender.id !== chrome.runtime.id) return;
     if (msg.type !== 'dmg:set') return;
     // Already on in this document (tab mode re-applies on 'loading' and 'complete').
-    if (msg.on && enabled) { keepOnTop(); sendResponse({ on: true }); return; }
+    if (msg.on && enabled) {
+      if (detached()) safeRender(); else keepOnTop();
+      sendResponse({ on: true });
+      return;
+    }
     enabled = !!msg.on;
     loadSettings().catch(() => {}).then(() => { safeRender(); sendResponse({ on: enabled }); });
     return true;

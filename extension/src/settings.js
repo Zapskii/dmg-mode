@@ -22,10 +22,12 @@ self.DMG_DEFAULTS = {
   followTab: true
 };
 
-// Pages where Chrome never allows extensions to run. Web pages only: the
+// Pages where the browser never allows extensions to run. Web pages only: the
 // extension doesn't ask for file:// access, so local files count as restricted.
+// Firefox's list is its extensions.webextensions.restrictedDomains default.
 self.dmgIsRestricted = function (url) {
   if (!url) return true;
   if (!/^https?:/.test(url)) return true;
-  return /^https:\/\/(chromewebstore\.google\.com|chrome\.google\.com\/webstore)/.test(url);
+  return /^https:\/\/(chromewebstore\.google\.com|chrome\.google\.com\/webstore)/.test(url)
+    || /^https:\/\/((discovery\.)?addons\.mozilla\.org|(accounts-static|addons|content)\.cdn\.mozilla\.net|((api|oauth|profile)\.)?accounts\.firefox\.com|install\.mozilla\.org|support\.mozilla\.org|sync\.services\.mozilla\.com)\//.test(url);
 };
