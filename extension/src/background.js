@@ -1,4 +1,6 @@
-importScripts('settings.js');
+// Chrome's service worker loads settings.js here; Firefox's event page lists it
+// in manifest background.scripts instead, where importScripts doesn't exist.
+if (typeof importScripts === 'function') importScripts('settings.js');
 
 const DEFAULTS = self.DMG_DEFAULTS;
 

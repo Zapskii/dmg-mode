@@ -27,6 +27,20 @@ for (const file of Object.values(manifest.action?.default_icon || {})) {
   if (!fs.existsSync(path.join(root, 'extension', file))) fail(`manifest: action icon missing (${file})`);
 }
 
+// ---------- Firefox manifest ----------
+const ff = require('./firefox-manifest.js').firefoxManifest();
+const gecko = ff.browser_specific_settings?.gecko || {};
+if (!/^[\w.+-]+@[\w.-]+$/.test(gecko.id || '')) fail('firefox: gecko.id must look like name@domain');
+if (!gecko.strict_min_version) fail('firefox: missing gecko.strict_min_version');
+if (!gecko.data_collection_permissions) fail('firefox: missing gecko.data_collection_permissions (AMO requires it)');
+if (ff.minimum_chrome_version) fail('firefox: minimum_chrome_version should be removed');
+const bgScripts = ff.background?.scripts || [];
+if (!bgScripts.length || ff.background.service_worker) fail('firefox: background must use scripts, not service_worker');
+for (const f of bgScripts) {
+  if (!fs.existsSync(path.join(root, 'extension', f))) fail(`firefox: background script missing (${f})`);
+}
+if (bgScripts.indexOf('src/settings.js') > bgScripts.indexOf('src/background.js')) fail('firefox: settings.js must load before background.js');
+
 // ---------- palettes ----------
 const index = readJson(path.join(palettesDir, 'index.json'));
 if (!Array.isArray(index) || !index.length) fail('palettes: index.json must list at least one id');
@@ -61,4 +75,4 @@ for (const f of fs.readdirSync(palettesDir)) {
 }
 
 if (failed) process.exit(1);
-console.log(`OK: manifest ${manifest.version}, ${index.length} palettes`);
+console.log(`OK: manifest ${manifest.version} (Chrome + Firefox), ${index.length} palettes`);

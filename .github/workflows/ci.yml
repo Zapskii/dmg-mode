@@ -23,8 +23,13 @@ jobs:
         run: node test/validate.js
       - name: Syntax-check extension scripts
         run: for f in extension/src/*.js extension/src/popup/*.js; do node --check "$f"; done
-      - name: Build store package
+      - name: Build store packages
         run: ./build.sh
+      - name: Lint Firefox package
+        run: |
+          mkdir -p "$RUNNER_TEMP/ff"
+          unzip -q dist/dmg-mode-firefox-*.zip -d "$RUNNER_TEMP/ff"
+          npx --yes web-ext@8.10.0 lint --source-dir "$RUNNER_TEMP/ff" --warnings-as-errors
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')

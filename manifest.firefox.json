@@ -1,0 +1,13 @@
+{
+  "minimum_chrome_version": null,
+  "background": {
+    "scripts": ["src/settings.js", "src/background.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "dmg-mode@zapski",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": { "required": ["none"] }
+    }
+  }
+}
