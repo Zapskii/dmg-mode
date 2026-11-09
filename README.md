@@ -60,6 +60,9 @@ committed Firefox copy and the scripts' syntax, and refuse the commit if anythin
 git config core.hooksPath .githooks
 ```
 
+The hook runs the checked-out branch's own scripts, as `build.sh` does — a branch can change both the
+hook and the validator. Enable it only in a clone you trust, and commit only on branches you have reviewed.
+
 CI re-runs the same checks, builds both packages and
 lints the Firefox one with `web-ext`. Pushing a `v*` tag publishes a GitHub release with both zips attached.
 

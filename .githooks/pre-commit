@@ -1,6 +1,11 @@
 #!/bin/sh
 # Validate manifests, palettes and the committed Firefox copy before committing.
 # Enable once per clone: git config core.hooksPath .githooks
+#
+# This runs the checked-out branch's own scripts, like build.sh does. A branch
+# can change this file and test/validate.js, so only enable it in a clone you
+# trust and only commit on branches you have reviewed. CI re-checks everything
+# regardless of who runs the hook.
 node test/validate.js || exit 1
 for f in extension/src/*.js extension/src/popup/*.js test/*.js; do
   node --check "$f" || exit 1
