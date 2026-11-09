@@ -107,8 +107,11 @@ as above, with "Chrome" read as "Firefox". Upload `dist/dmg-mode-firefox-<versio
 ## Pre-submission checklist
 
 - [x] `extension/manifest.json` version bumped for this upload
-- [ ] `./build.sh`, upload `dist/dmg-mode-<version>.zip` (Chrome) and
-      `dist/dmg-mode-firefox-<version>.zip` (Firefox)
+- [x] `./build.sh`; `v0.1.3` tagged and released with both zips
+- [x] Firefox 0.1.3 submitted to addons.mozilla.org (in review, 2026-11-09)
+- [ ] Chrome 0.1.3 upload
+- [ ] Next release (0.1.4): raise `gecko.strict_min_version` to `"142.0"` — AMO warns that
+      `data_collection_permissions` reached Firefox for Android only in 142
 - [x] Repo is public (the listing and README both point at the source)
 - [ ] Try the packaged zip once: Turn on, tab mode, palette switch, toggle off
 
