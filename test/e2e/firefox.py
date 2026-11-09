@@ -98,7 +98,7 @@ o = Options(); o.add_argument('-headless'); o.binary_location = '/Applications/F
 if not os.path.exists(o.binary_location): o.binary_location = shutil.which('firefox') or ''
 o.set_preference('extensions.webextensions.uuids', json.dumps({'dmg-mode@zapski': UUID}))
 d = webdriver.Firefox(options=o, service=Service(service_args=['--allow-system-access']))
-d.set_window_size(1280, 800)
+d.set_window_size(1280, 800); d.set_page_load_timeout(45)
 
 def shot():
     im = Image.open(io.BytesIO(d.get_screenshot_as_png())).convert('RGB')
@@ -189,7 +189,9 @@ try:
         for url in ['https://www.bbc.co.uk/news', 'https://www.ebay.co.uk/sch/i.html?_nkw=handheld',
                     'https://www.theguardian.com/uk', 'https://www.linkedin.com/']:
             print(url)
-            d.get(url); time.sleep(4); d.execute_script('scrollTo(0,1500)'); time.sleep(1.5)
+            try: d.get(url)
+            except Exception: pass  # a stalled subresource shouldn't fail the check
+            time.sleep(4); d.execute_script('scrollTo(0,1500)'); time.sleep(1.5)
             if not page("return chrome.runtime.sendMessage({type:'popup:state',tabId:arguments[0]})", tab_id())['on']:
                 toggle()
             d.execute_script('scrollTo(0,1400)'); time.sleep(0.5)
