@@ -81,11 +81,35 @@ Same package, separate store. Registration is free.
 
 Updates need a version bump and a new upload. The first submission is manual; later ones can use Partner Center's Publish API from CI.
 
+## Firefox (addons.mozilla.org)
+
+Same name, summary, description, single-purpose text and permission justifications
+as above, with "Chrome" read as "Firefox". Upload `dist/dmg-mode-firefox-<version>.zip`.
+
+1. Register as a developer at [addons.mozilla.org/developers](https://addons.mozilla.org/developers/); free.
+   Display name **Zapski**. The account is identified by the add-on ID in
+   `manifest.firefox.json` (`dmg-mode@zapski`) — pick a permanent ID before the first
+   upload, because it can't change after review.
+2. **Submit a New Add-on** → upload the zip. Choose **On this site** (listed publicly).
+3. The code isn't bundled or minified, so no source-code upload is needed. If a reviewer asks,
+   point at the public repo.
+4. Firefox-specific notes for the reviewer: the extension declares no data collection
+   (`browser_specific_settings.gecko.data_collection_permissions.required: ["none"]`) and makes
+   no network requests. The four-shade effect is applied by filtering page elements rather than
+   with `backdrop-filter` (which Firefox doesn't support for SVG filter references), so fixed
+   headers stay pinned; see "How it works" in the README.
+5. Screenshots: 1280×800 works for AMO too. Take them in Firefox with the Firefox build so the
+   listing shows what Firefox users get.
+6. Permissions to justify in the reviewer box: `activeTab`, `scripting`, `storage`, and the
+   optional `*://*/*` host permission, worded as in the Chrome section.
+7. After review, updates are an upload plus a version bump; the listing keeps the same URL.
+
 ## Pre-submission checklist
 
-- [ ] `extension/manifest.json` version bumped for this upload
-- [ ] `./build.sh`, upload `dist/dmg-mode-<version>.zip`
-- [ ] Repo is public (the listing and README both point at the source)
+- [x] `extension/manifest.json` version bumped for this upload
+- [ ] `./build.sh`, upload `dist/dmg-mode-<version>.zip` (Chrome) and
+      `dist/dmg-mode-firefox-<version>.zip` (Firefox)
+- [x] Repo is public (the listing and README both point at the source)
 - [ ] Try the packaged zip once: Turn on, tab mode, palette switch, toggle off
 
 The screenshot is the real rendering pipeline (the bundled `content.js` applied
