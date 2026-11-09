@@ -44,7 +44,7 @@ function renderSettings() {
 
 function renderFollow() {
   $('follow-tab').checked = !!settings.followTab;
-  // On by default, but it only works once Chrome's "all sites" access is granted.
+  // On by default, but it only works once the browser's "all sites" access is granted.
   $('follow-hint').hidden = !(settings.followTab && !allSites);
 }
 
@@ -87,7 +87,7 @@ async function init() {
     $('restricted').hidden = false;
     // In tab mode the tab can be on while showing e.g. the new-tab page: keep
     // the on/off button usable so it can still be switched off from here.
-    if (on) $('restricted').textContent = "Chrome doesn't let extensions run on this page. DMG Mode stays on for this tab and comes back on the next normal page.";
+    if (on) $('restricted').textContent = "Your browser doesn't let extensions run on this page. DMG Mode stays on for this tab and comes back on the next normal page.";
     else $('controls').classList.add('disabled');
     return;
   }
@@ -101,7 +101,7 @@ async function init() {
 
 $('toggle').addEventListener('click', async () => {
   // First "Turn on" with tab mode enabled: ask for all-sites access now, while
-  // we have the click (Chrome only shows the prompt for a user gesture).
+  // we have the click (the browser only shows the prompt for a user gesture).
   if (!tabOn && settings.followTab && !allSites) {
     allSites = await chrome.permissions.request({ origins: HOSTS });
     if (!allSites) await save({ followTab: false }); // declined: plain page mode
@@ -130,7 +130,7 @@ $('remember').addEventListener('change', async (e) => {
   const o = origin();
   if (!o) return;
   if (e.target.checked) {
-    // Must run inside the click: Chrome only shows the permission prompt for a user gesture.
+    // Must run inside the click: the browser only shows the permission prompt for a user gesture.
     const granted = await chrome.permissions.request({ origins: HOSTS });
     if (!granted) { e.target.checked = false; return; }
   }
@@ -146,7 +146,7 @@ $('remember').addEventListener('change', async (e) => {
 
 $('follow-tab').addEventListener('change', async (e) => {
   if (e.target.checked && !allSites) {
-    // Must run inside the click: Chrome only shows the permission prompt for a user gesture.
+    // Must run inside the click: the browser only shows the permission prompt for a user gesture.
     allSites = await chrome.permissions.request({ origins: HOSTS });
     if (!allSites) { e.target.checked = false; return; }
   }
