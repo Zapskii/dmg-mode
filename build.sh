@@ -22,8 +22,10 @@ node test/firefox-manifest.js > "$tmp/manifest.json"
 (cd "$tmp" && zip -r -X -q "$OLDPWD/$ffout" . -x '*.DS_Store' -x '*/.DS_Store')
 echo "Built $ffout ($(du -h "$ffout" | cut -f1))"
 
-# Unpacked Firefox build, for about:debugging (extension/ itself carries the
-# Chrome manifest, which Firefox can't load: no background.service_worker).
-rm -rf dist/firefox-unpacked
-cp -R "$tmp" dist/firefox-unpacked
-echo "Built dist/firefox-unpacked (Load Temporary Add-on -> manifest.json)"
+# Unpacked Firefox build, committed so a fresh clone can load it without
+# building (extension/ carries the Chrome manifest, which Firefox refuses).
+# test/validate.js fails if this copy drifts from extension/ + manifest.firefox.json.
+rm -rf extension-firefox
+cp -R "$tmp" extension-firefox
+find extension-firefox -name '.DS_Store' -delete
+echo "Built extension-firefox/ (Load Temporary Add-on -> manifest.json)"
