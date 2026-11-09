@@ -62,7 +62,7 @@ classic handheld LCD screen.
 
 ## Developer account
 
-- Register at [chrome.google.com/webstore/devconsole](https://chrome.google.com/webstore/devconsole); one-time US$5 fee. Version 0.1.1 is ready to upload.
+- Register at [chrome.google.com/webstore/devconsole](https://chrome.google.com/webstore/devconsole); one-time US$5 fee. 0.1.2 is published; 0.1.3 is ready to upload.
 - The **public contact email** is a separate verified field on the dashboard's Account page — it is not the Google sign-in address and it is shown on the listing. Use a Zapski address, not a personal one.
 - Choose **Non-Trader** unless the extension becomes commercial: trader verification can publish a postal address and phone number drawn from the Google Payments profile.
 - Set the publisher/account name to Zapski.
