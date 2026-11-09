@@ -85,10 +85,8 @@ unfiltered wrapper elements stay in colour.
 
 ## Layout
 
-## Layout
-
 ```
-extension/            everything that ships (load this folder unpacked)
+extension/            everything that ships (Chrome: load unpacked; Firefox: build first)
   manifest.json
   src/
     background.js     service worker: shortcut, per-tab state, tab mode, per-site auto-apply
