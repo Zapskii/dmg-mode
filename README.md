@@ -1,6 +1,6 @@
 # DMG Mode
 
-A Chrome extension that makes any web page look like it's running on a Game Boy: every pixel snaps to one of four shades, with pixel fonts and chunky pixelated images.
+A Chrome and Firefox extension that makes any web page look like it's running on a Game Boy: every pixel snaps to one of four shades, with pixel fonts and chunky pixelated images.
 
 Free and open source. Collects nothing, makes no network requests, runs no remote code. [Read the source](https://github.com/Zapskii/dmg-mode).
 
@@ -31,6 +31,10 @@ git clone https://github.com/Zapskii/dmg-mode.git
 2. Click **Load unpacked** and pick the **`extension/`** folder inside the repo.
 3. Pin DMG Mode to the toolbar, open any page, and press `Alt+Shift+G` (or use the popup).
 
+Firefox: load `extension/` as a temporary add-on from `about:debugging#/runtime/this-firefox`
+(**Load Temporary Add-on…** → pick `extension/manifest.json`). The Firefox manifest keys live in
+`manifest.firefox.json` and are merged in at build time; the folder itself still carries the Chrome manifest.
+
 Test against `test/pages/fixture.html` (palette, pixelation, tall pages) and `test/pages/fonts.html` (pixel fonts). Serve the repo over HTTP — `python3 -m http.server` at the repo root, then open `http://localhost:8000/test/pages/fixture.html`. The extension doesn't request file:// access.
 
 ## Build the store package
@@ -39,9 +43,21 @@ Test against `test/pages/fixture.html` (palette, pixelation, tall pages) and `te
 ./build.sh
 ```
 
-This zips the contents of `extension/` into `dist/dmg-mode-<version>.zip`, ready to upload to the Chrome Web Store. Only `extension/` ships; docs, tests and this README stay out of the package.
+This writes two zips: `dist/dmg-mode-<version>.zip` for the Chrome Web Store, and
+`dist/dmg-mode-firefox-<version>.zip` for addons.mozilla.org (the same files with
+`manifest.firefox.json` merged over `manifest.json`). Only `extension/` ships; docs, tests and this
+README stay out of the package.
 
-CI validates the manifest and palettes, syntax-checks the scripts and builds the package on every push. Pushing a `v*` tag publishes a GitHub release with the zip attached.
+CI validates both manifests and the palettes, syntax-checks the scripts, builds both packages and
+lints the Firefox one with `web-ext`. Pushing a `v*` tag publishes a GitHub release with both zips attached.
+
+The end-to-end checks need Selenium and a real Firefox:
+
+```
+python3 -m pip install selenium pillow
+python3 test/e2e/firefox.py               # fixture pages, served locally
+python3 test/e2e/firefox.py --real-sites  # also BBC News, eBay, the Guardian, LinkedIn
+```
 
 ## How it works
 
@@ -53,7 +69,17 @@ CI validates the manifest and palettes, syntax-checks the scripts and builds the
 
 Because only what's on screen is filtered, page length doesn't matter and page layout is untouched. Fixed and sticky elements, and iframes, are recoloured too. (An earlier version filtered `<html>` directly. Chrome gives up on that for very tall pages such as eBay search results, which showed as a plain green screen.)
 
-Known gap: elements in the browser's top layer (fullscreen video, modal `<dialog>`s) sit above the overlay and keep their normal colours.
+Firefox can't use that method: it ignores `backdrop-filter: url()` and `filter: url()` on `<html>`, and a
+filter on `<body>` makes fixed elements scroll with the page. So in Firefox the filter goes on the page's
+elements instead, stepping down past any element that contains a `position: fixed` element so each fixed
+element is filtered on its own and stays pinned; the elements that step down get their background colour
+mapped to the palette in place of the filter.
+
+Known gaps in both browsers: elements in the browser's top layer (fullscreen video, modal `<dialog>`s)
+keep their normal colours. In Firefox, text and background images painted directly by one of the
+unfiltered wrapper elements stay in colour.
+
+## Layout
 
 ## Layout
 
@@ -68,8 +94,10 @@ extension/            everything that ships (load this folder unpacked)
   palettes/           one JSON file per palette + index.json
   assets/             icons, fonts/ (bundled pixel fonts + licences)
 docs/SPEC.md          product spec (snapshot of the online doc)
+manifest.firefox.json Firefox-only manifest keys, merged over extension/manifest.json at build time
 test/pages/           fixture pages for manual and automated testing
-build.sh              builds the store zip into dist/
+test/e2e/firefox.py   Selenium end-to-end checks for the Firefox build
+build.sh              builds both store zips into dist/
 ```
 
 ## Adding a palette
