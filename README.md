@@ -53,7 +53,14 @@ This writes two zips: `dist/dmg-mode-<version>.zip` for the Chrome Web Store, an
 `manifest.firefox.json` merged over `manifest.json`). It also refreshes `extension-firefox/`, the
 unpacked Firefox copy. Only `extension/` ships; docs, tests and this README stay out of the package.
 
-CI validates both manifests and the palettes, syntax-checks the scripts, builds both packages and
+Enable the pre-commit checks once per clone — they validate both manifests, the palettes, the
+committed Firefox copy and the scripts' syntax, and refuse the commit if anything fails:
+
+```
+git config core.hooksPath .githooks
+```
+
+CI re-runs the same checks, builds both packages and
 lints the Firefox one with `web-ext`. Pushing a `v*` tag publishes a GitHub release with both zips attached.
 
 The end-to-end checks need Selenium and a real Firefox:
